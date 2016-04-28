@@ -41,6 +41,8 @@ public class ScrollingActivity extends AppCompatActivity {
     private ReadingParser rp = new ReadingParser();
     private List<String> dataBuffer = new LinkedList<String>();
     private String logFileName = "";
+    private GpsHelper gpsHelper = null;
+    private SensorHelper sensorHelper = null;
 
     void writeToTextView(TextView tView, NestedScrollView sView, String msg){
         if(tView == null) return;
@@ -100,6 +102,12 @@ public class ScrollingActivity extends AppCompatActivity {
 
         scrollTextView = (TextView) findViewById(R.id.scrollTextView);
         scrollView = (NestedScrollView) findViewById(R.id.scrollView);
+
+        // Initialize GPS
+        gpsHelper = new GpsHelper(this);
+
+        // Initialize IMU
+        sensorHelper = new SensorHelper(this);
 
         writeToTextView(scrollTextView, scrollView, "Starting...\n");
 
@@ -164,6 +172,8 @@ public class ScrollingActivity extends AppCompatActivity {
         if(rp.isDataReady()){
             float[] fdata = rp.getData();
             String msg = "";
+
+            // Get magnectometer datas to msg
             msg += "X:";
             msg += fdata[0];
             msg += " Y:";
@@ -174,13 +184,52 @@ public class ScrollingActivity extends AppCompatActivity {
             msg += fdata[3];
             msg += " t:";
             msg += fdata[4];
-            msg += "\n";
+            //msg += "\n";
 
+            // Get GPS datas to msg
+            gpsHelper.getMyLocation();
+            double lat = 0;
+            double lng = 0;
+            if(gpsHelper.isGPSenabled()){
+                lat = gpsHelper.getLatitude();
+                lng = gpsHelper.getLongitude();
+
+                String debugGps = String.valueOf(lat) + " " + String.valueOf(lng);
+            }
+            msg += " Lat:";
+            msg += String.valueOf(lat);
+            msg += " Lng:";
+            msg += String.valueOf(lng);
+
+            // Get IMU datas to msg
+            msg += " Accx:";
+            msg += String.valueOf(sensorHelper.getAccx());
+            msg += " Accy:";
+            msg += String.valueOf(sensorHelper.getAccy());
+            msg += " Accz:";
+            msg += String.valueOf(sensorHelper.getAccz());
+
+            msg += " Gyx:";
+            msg += String.valueOf(sensorHelper.getGyx());
+            msg += " Gyy:";
+            msg += String.valueOf(sensorHelper.getGyy());
+            msg += " Gyz:";
+            msg += String.valueOf(sensorHelper.getGyz());
+
+            msg += " Magx:";
+            msg += String.valueOf(sensorHelper.getMagx());
+            msg += " Magy:";
+            msg += String.valueOf(sensorHelper.getMagy());
+            msg += " Magz:";
+            msg += String.valueOf(sensorHelper.getMagz());
+
+            msg += "\n";
+            // Write data in buffer
             dataBuffer.add(msg);
             if(dataBuffer.size() > 10){
                 writeBufferToFile();
             }
-
+            // Write data in file
             writeToTextView(scrollTextView, scrollView, msg);
         }
     }
