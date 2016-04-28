@@ -3,6 +3,7 @@ package br.ufmg.dcc.verlab.maglogger;
 import android.content.Context;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.design.widget.FloatingActionButton;
@@ -24,8 +25,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -39,7 +41,11 @@ public class ScrollingActivity extends AppCompatActivity {
     private TextView scrollTextView;
     private NestedScrollView scrollView;
     private ReadingParser rp = new ReadingParser();
-    private List<String> dataBuffer = new LinkedList<String>();
+    //private List<String> dataBuffer = new LinkedList<String>();
+    //private List<String> dataBuffer = Collections.synchronizedList(new ArrayList<String>());
+    private Queue<String> dataBuffer = new ConcurrentLinkedQueue<String>();
+
+
     private String logFileName = "";
     private GpsHelper gpsHelper = null;
     private SensorHelper sensorHelper = null;
@@ -171,60 +177,61 @@ public class ScrollingActivity extends AppCompatActivity {
 
         if(rp.isDataReady()){
             float[] fdata = rp.getData();
-            String msg = "";
+            StringBuilder sb = new StringBuilder();
 
-            // Get magnectometer datas to msg
-            msg += "X:";
-            msg += fdata[0];
-            msg += " Y:";
-            msg += fdata[1];
-            msg += " Z:";
-            msg += fdata[2];
-            msg += " T:";
-            msg += fdata[3];
-            msg += " t:";
-            msg += fdata[4];
-            //msg += "\n";
 
-            // Get GPS datas to msg
+            // Get magnetometer data
+            sb.append("X:");
+            sb.append(fdata[0]);
+            sb.append(", Y:");
+            sb.append(fdata[1]);
+            sb.append(", Z:");
+            sb.append(fdata[2]);
+            sb.append(", T:");
+            sb.append(fdata[3]);
+            sb.append(", t:");
+            sb.append(fdata[4]);
+
+            // Get GPS data
             gpsHelper.getMyLocation();
             double lat = 0;
             double lng = 0;
             if(gpsHelper.isGPSenabled()){
                 lat = gpsHelper.getLatitude();
                 lng = gpsHelper.getLongitude();
-
-                String debugGps = String.valueOf(lat) + " " + String.valueOf(lng);
             }
-            msg += " Lat:";
-            msg += String.valueOf(lat);
-            msg += " Lng:";
-            msg += String.valueOf(lng);
 
-            // Get IMU datas to msg
-            msg += " Accx:";
-            msg += String.valueOf(sensorHelper.getAccx());
-            msg += " Accy:";
-            msg += String.valueOf(sensorHelper.getAccy());
-            msg += " Accz:";
-            msg += String.valueOf(sensorHelper.getAccz());
+            sb.append(", Lat:");
+            sb.append(String.valueOf(lat));
+            sb.append(", Lng:");
+            sb.append(String.valueOf(lng));
 
-            msg += " Gyx:";
-            msg += String.valueOf(sensorHelper.getGyx());
-            msg += " Gyy:";
-            msg += String.valueOf(sensorHelper.getGyy());
-            msg += " Gyz:";
-            msg += String.valueOf(sensorHelper.getGyz());
+            // Get IMU data
+            sb.append(", Accx:");
+            sb.append(String.valueOf(sensorHelper.getAccx()));
+            sb.append(", Accy:");
+            sb.append(String.valueOf(sensorHelper.getAccy()));
+            sb.append(", Accz:");
+            sb.append(String.valueOf(sensorHelper.getAccz()));
 
-            msg += " Magx:";
-            msg += String.valueOf(sensorHelper.getMagx());
-            msg += " Magy:";
-            msg += String.valueOf(sensorHelper.getMagy());
-            msg += " Magz:";
-            msg += String.valueOf(sensorHelper.getMagz());
+            sb.append(", Gyx:");
+            sb.append(String.valueOf(sensorHelper.getGyx()));
+            sb.append(", Gyy:");
+            sb.append(String.valueOf(sensorHelper.getGyy()));
+            sb.append(", Gyz:");
+            sb.append(String.valueOf(sensorHelper.getGyz()));
 
-            msg += "\n";
+            sb.append(" Magx:");
+            sb.append(String.valueOf(sensorHelper.getMagx()));
+            sb.append(" Magy:");
+            sb.append(String.valueOf(sensorHelper.getMagy()));
+            sb.append(" Magz:");
+            sb.append(String.valueOf(sensorHelper.getMagz()));
+
+            sb.append("\n");
+
             // Write data in buffer
+            String msg = sb.toString();
             dataBuffer.add(msg);
             if(dataBuffer.size() > 10){
                 writeBufferToFile();
@@ -305,28 +312,63 @@ public class ScrollingActivity extends AppCompatActivity {
     }
 
     private void writeBufferToFile() {
-        try {
-//            File path = this.getApplicationContext().getFilesDir();
-//            .getAbsolutePath()
-            File path = Environment.getExternalStorageDirectory();
-            File file = new File(path, this.logFileName);
-
-            Log.e("Exception", "Writting to file...." + path + "/" +  this.logFileName);
-
-            FileOutputStream stream = new FileOutputStream(file, true);
-            try {
-                for(String msg: this.dataBuffer){
-                    stream.write((msg).getBytes());
-                }
-                this.dataBuffer.clear();
-                writeToTextView(scrollTextView, scrollView, "\n\nWrote to file!\n\n");
-            } finally {
-                stream.close();
-            }
-        }
-        catch (IOException e) {
-            Log.e("Exception", "File write failed: " + e.toString());
+        if(this.dataBuffer.size() > 0){
+            (new WriteLogToFileTask()).execute();
         }
     }
+
+    private class WriteLogToFileTask extends AsyncTask<Void, Void, Boolean> {
+
+        String error = "";
+
+        WriteLogToFileTask(){
+
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            try {
+                File path = Environment.getExternalStorageDirectory();
+                File file = new File(path, logFileName);
+
+                Log.e("Debug", "Writting to file...." + path + "/" +  logFileName);
+
+                FileOutputStream stream = new FileOutputStream(file, true);
+                try {
+                    for(int i = 0; i < 10 && !dataBuffer.isEmpty(); i++){
+                        String msg = dataBuffer.poll();
+                        stream.write((msg).getBytes());
+                    }
+                } finally {
+                    stream.close();
+                }
+            }
+            catch (IOException e) {
+                Log.e("Exception", "File write failed: " + e.toString());
+                error = e.toString();
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean b) {
+            if(b){
+                File path = Environment.getExternalStorageDirectory();
+                writeToTextView(scrollTextView, scrollView, "\n\nWrote to:"+path + "/" +  logFileName+"\n\n");
+            }
+            else{
+                writeToTextView(scrollTextView, scrollView, "\n\nError writing to file..."+this.error+"\n\n");
+            }
+        }
+
+        @Override
+        protected void onPreExecute() {}
+
+        @Override
+        protected void onProgressUpdate(Void... values) {}
+    }
+
 
 }
