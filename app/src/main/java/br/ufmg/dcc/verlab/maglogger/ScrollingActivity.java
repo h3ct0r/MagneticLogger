@@ -233,11 +233,11 @@ public class ScrollingActivity extends AppCompatActivity {
             // Write data in buffer
             String msg = sb.toString();
             dataBuffer.add(msg);
-            if(dataBuffer.size() > 10){
+            if(dataBuffer.size() > 100){
                 writeBufferToFile();
             }
             // Write data in file
-            writeToTextView(scrollTextView, scrollView, msg);
+            //writeToTextView(scrollTextView, scrollView, msg);
         }
     }
 
