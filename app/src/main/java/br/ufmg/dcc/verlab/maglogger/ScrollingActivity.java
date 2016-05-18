@@ -14,6 +14,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.hoho.android.usbserial.driver.UsbSerialDriver;
@@ -46,9 +48,20 @@ public class ScrollingActivity extends AppCompatActivity {
     private Queue<String> dataBuffer = new ConcurrentLinkedQueue<String>();
 
 
+    private TextView mx, my, mz;
+    private TextView mT, mt;
+    private TextView txtlon, txtlat;
+    private TextView gx, gy, gz;
+    private TextView ax, ay, az;
+    private TextView max, may, maz;
+    private TextView txtfile;
+
     private String logFileName = "";
     private GpsHelper gpsHelper = null;
     private SensorHelper sensorHelper = null;
+    private Button con;
+
+    private ProgressBar pb;
 
     void writeToTextView(TextView tView, NestedScrollView sView, String msg){
         if(tView == null) return;
@@ -103,12 +116,37 @@ public class ScrollingActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_scrolling);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        //Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        //setSupportActionBar(toolbar);
 
         scrollTextView = (TextView) findViewById(R.id.scrollTextView);
         scrollView = (NestedScrollView) findViewById(R.id.scrollView);
 
+        mx = (TextView) findViewById(R.id.txt_mx);
+        my = (TextView) findViewById(R.id.txt_my);
+        mz = (TextView) findViewById(R.id.txt_mz);
+        mT = (TextView) findViewById(R.id.txt_mT);
+        mt = (TextView) findViewById(R.id.txt_mt);
+
+        txtlat = (TextView) findViewById(R.id.txt_lat);
+        txtlon = (TextView) findViewById(R.id.txt_lon);
+
+        gx = (TextView) findViewById(R.id.txt_gx);
+        gy = (TextView) findViewById(R.id.txt_gy);
+        gz = (TextView) findViewById(R.id.txt_gz);
+
+        ax = (TextView) findViewById(R.id.txt_ax);
+        ay = (TextView) findViewById(R.id.txt_ay);
+        az = (TextView) findViewById(R.id.txt_az);
+
+        max = (TextView) findViewById(R.id.txt_imx);
+        may = (TextView) findViewById(R.id.txt_imy);
+        maz = (TextView) findViewById(R.id.txt_imz);
+
+        txtfile = (TextView) findViewById(R.id.txt_file);
+        txtfile.setTextSize(8);
+
+        pb = (ProgressBar) findViewById(R.id.progressBar);
         // Initialize GPS
         gpsHelper = new GpsHelper(this);
 
@@ -119,8 +157,15 @@ public class ScrollingActivity extends AppCompatActivity {
 
         java.util.Date date= new java.util.Date();
         this.logFileName = "magnetic_log_" + (new Timestamp(date.getTime())).toString() + ".txt";
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        txtfile.setText("magnetic_log_" + (new Timestamp(date.getTime())).toString() + ".txt");
+        con = (Button) findViewById(R.id.btn_start);
+        con.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                connect();
+            }
+        });
+        /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -129,6 +174,7 @@ public class ScrollingActivity extends AppCompatActivity {
                 //        .setAction("Action", null).show();
             }
         });
+        */
     }
 
     @Override
@@ -181,6 +227,13 @@ public class ScrollingActivity extends AppCompatActivity {
 
 
             // Get magnetometer data
+
+            mx.setText("x: "+fdata[0]);
+            my.setText("y: "+fdata[1]);
+            mz.setText("z: " + fdata[2]);
+            mT.setText("T: " + fdata[3]);
+            mt.setText("t: " + fdata[4]);
+
             sb.append("X:");
             sb.append(fdata[0]);
             sb.append(", Y:");
@@ -203,30 +256,41 @@ public class ScrollingActivity extends AppCompatActivity {
 
             sb.append(", Lat:");
             sb.append(String.valueOf(lat));
+            txtlat.setText("Lat: " + lat);
             sb.append(", Lng:");
             sb.append(String.valueOf(lng));
+            txtlon.setText("Lon: " + lng);
 
             // Get IMU data
             sb.append(", Accx:");
             sb.append(String.valueOf(sensorHelper.getAccx()));
+            ax.setText("ax: " + sensorHelper.getAccx());
             sb.append(", Accy:");
             sb.append(String.valueOf(sensorHelper.getAccy()));
+            ay.setText("ay: " + sensorHelper.getAccy());
             sb.append(", Accz:");
             sb.append(String.valueOf(sensorHelper.getAccz()));
+            az.setText("az: " + sensorHelper.getAccz());
 
             sb.append(", Gyx:");
             sb.append(String.valueOf(sensorHelper.getGyx()));
+            gx.setText("gx: " + sensorHelper.getGyx());
             sb.append(", Gyy:");
             sb.append(String.valueOf(sensorHelper.getGyy()));
+            gy.setText("gy: " + sensorHelper.getGyy());
             sb.append(", Gyz:");
             sb.append(String.valueOf(sensorHelper.getGyz()));
+            gz.setText("gz: " + sensorHelper.getGyz());
 
             sb.append(" Magx:");
             sb.append(String.valueOf(sensorHelper.getMagx()));
+            max.setText("mx: " + sensorHelper.getMagx());
             sb.append(" Magy:");
             sb.append(String.valueOf(sensorHelper.getMagy()));
+            may.setText("my: " + sensorHelper.getMagy());
             sb.append(" Magz:");
             sb.append(String.valueOf(sensorHelper.getMagz()));
+            maz.setText("mz: " + sensorHelper.getMagz());
 
             sb.append("\n");
 
@@ -236,6 +300,7 @@ public class ScrollingActivity extends AppCompatActivity {
             if(dataBuffer.size() > 100){
                 writeBufferToFile();
             }
+            pb.setProgress(dataBuffer.size());
             // Write data in file
             //writeToTextView(scrollTextView, scrollView, msg);
         }
@@ -314,15 +379,15 @@ public class ScrollingActivity extends AppCompatActivity {
     private void writeBufferToFile() {
         if(this.dataBuffer.size() > 0){
             (new WriteLogToFileTask()).execute();
+            txtfile.setText("Writting to file...." + Environment.getExternalStorageDirectory() + "/" + logFileName);
         }
     }
 
     private class WriteLogToFileTask extends AsyncTask<Void, Void, Boolean> {
 
         String error = "";
-
+        private Queue<String> buffer = new ConcurrentLinkedQueue<String>();
         WriteLogToFileTask(){
-
         }
 
         @Override
@@ -330,20 +395,17 @@ public class ScrollingActivity extends AppCompatActivity {
             try {
                 File path = Environment.getExternalStorageDirectory();
                 File file = new File(path, logFileName);
-
-                Log.e("Debug", "Writting to file...." + path + "/" +  logFileName);
-
+                Log.e("Debug", "Writting to file...." + path + "/" + logFileName);
                 FileOutputStream stream = new FileOutputStream(file, true);
                 try {
-                    for(int i = 0; i < 10 && !dataBuffer.isEmpty(); i++){
+                    for(int i = 0; i < 100 && !dataBuffer.isEmpty(); i++){
                         String msg = dataBuffer.poll();
                         stream.write((msg).getBytes());
                     }
                 } finally {
                     stream.close();
                 }
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 Log.e("Exception", "File write failed: " + e.toString());
                 error = e.toString();
                 return false;
@@ -356,10 +418,11 @@ public class ScrollingActivity extends AppCompatActivity {
         protected void onPostExecute(Boolean b) {
             if(b){
                 File path = Environment.getExternalStorageDirectory();
-                writeToTextView(scrollTextView, scrollView, "\n\nWrote to:"+path + "/" +  logFileName+"\n\n");
-            }
-            else{
+                writeToTextView(scrollTextView, scrollView, "\n\nWrote to:" + path + "/" +  logFileName+"\n\n");
+                txtfile.setText("Wrote to:" + path + "/" +  logFileName);
+            } else {
                 writeToTextView(scrollTextView, scrollView, "\n\nError writing to file..."+this.error+"\n\n");
+                txtfile.setText("Error writing to file..." + this.error);
             }
         }
 
