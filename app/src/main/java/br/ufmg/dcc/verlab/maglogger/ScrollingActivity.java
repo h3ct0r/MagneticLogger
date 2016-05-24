@@ -49,11 +49,13 @@ public class ScrollingActivity extends AppCompatActivity {
 
 
     private TextView mx, my, mz;
+    private TextView mxc, myc, mzc;
     private TextView mT, mt;
     private TextView txtlon, txtlat;
     private TextView gx, gy, gz;
     private TextView ax, ay, az;
     private TextView max, may, maz;
+
     private TextView txtfile;
 
     private String logFileName = "";
@@ -122,26 +124,49 @@ public class ScrollingActivity extends AppCompatActivity {
         scrollTextView = (TextView) findViewById(R.id.scrollTextView);
         scrollView = (NestedScrollView) findViewById(R.id.scrollView);
 
+        //Initialize text view datas from Magnetometer, IMU and GPS
         mx = (TextView) findViewById(R.id.txt_mx);
+        mx.setTextSize(8);
         my = (TextView) findViewById(R.id.txt_my);
+        my.setTextSize(8);
         mz = (TextView) findViewById(R.id.txt_mz);
+        mz.setTextSize(8);
+        mxc = (TextView) findViewById(R.id.txt_mxc);
+        mxc.setTextSize(8);
+        myc = (TextView) findViewById(R.id.txt_myc);
+        myc.setTextSize(8);
+        mzc = (TextView) findViewById(R.id.txt_mzc);
+        mzc.setTextSize(8);
         mT = (TextView) findViewById(R.id.txt_mT);
+        mT.setTextSize(8);
         mt = (TextView) findViewById(R.id.txt_mt);
+        mt.setTextSize(8);
 
         txtlat = (TextView) findViewById(R.id.txt_lat);
+        txtlat.setTextSize(8);
         txtlon = (TextView) findViewById(R.id.txt_lon);
+        txtlon.setTextSize(8);
 
         gx = (TextView) findViewById(R.id.txt_gx);
+        gx.setTextSize(8);
         gy = (TextView) findViewById(R.id.txt_gy);
+        gy.setTextSize(8);
         gz = (TextView) findViewById(R.id.txt_gz);
+        gz.setTextSize(8);
 
         ax = (TextView) findViewById(R.id.txt_ax);
+        ax.setTextSize(8);
         ay = (TextView) findViewById(R.id.txt_ay);
+        ay.setTextSize(8);
         az = (TextView) findViewById(R.id.txt_az);
+        az.setTextSize(8);
 
         max = (TextView) findViewById(R.id.txt_imx);
+        max.setTextSize(8);
         may = (TextView) findViewById(R.id.txt_imy);
+        may.setTextSize(8);
         maz = (TextView) findViewById(R.id.txt_imz);
+        maz.setTextSize(8);
 
         txtfile = (TextView) findViewById(R.id.txt_file);
         txtfile.setTextSize(8);
@@ -155,7 +180,7 @@ public class ScrollingActivity extends AppCompatActivity {
 
         writeToTextView(scrollTextView, scrollView, "Starting...\n");
 
-        java.util.Date date= new java.util.Date();
+        java.util.Date date = new java.util.Date();
         this.logFileName = "magnetic_log_" + (new Timestamp(date.getTime())).toString() + ".txt";
         txtfile.setText("magnetic_log_" + (new Timestamp(date.getTime())).toString() + ".txt");
         con = (Button) findViewById(R.id.btn_start);
@@ -165,16 +190,6 @@ public class ScrollingActivity extends AppCompatActivity {
                 connect();
             }
         });
-        /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                connect();
-                //Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                //        .setAction("Action", null).show();
-            }
-        });
-        */
     }
 
     @Override
@@ -231,15 +246,31 @@ public class ScrollingActivity extends AppCompatActivity {
             mx.setText("x: "+fdata[0]);
             my.setText("y: "+fdata[1]);
             mz.setText("z: " + fdata[2]);
+            // Calibrated
+            mxc.setText("xc: " + fdata[0] * 1.247);
+            myc.setText("yc: " + fdata[1] * 0.894);
+            mzc.setText("zc: " + fdata[2] * 0.924);
+
             mT.setText("T: " + fdata[3]);
             mt.setText("t: " + fdata[4]);
 
-            sb.append("X:");
+            java.util.Date date = new java.util.Date();
+            sb.append("Timestamp:" + (new Timestamp(date.getTime())).toString());
+
+            sb.append(", XCal:");
+            sb.append(fdata[0]*1.247);
+            sb.append(", YCal:");
+            sb.append(fdata[1]*0.894);
+            sb.append(", ZCal:");
+            sb.append(fdata[2]*0.924);
+
+            sb.append(", X:");
             sb.append(fdata[0]);
             sb.append(", Y:");
             sb.append(fdata[1]);
             sb.append(", Z:");
             sb.append(fdata[2]);
+
             sb.append(", T:");
             sb.append(fdata[3]);
             sb.append(", t:");
@@ -262,6 +293,7 @@ public class ScrollingActivity extends AppCompatActivity {
             txtlon.setText("Lon: " + lng);
 
             // Get IMU data
+            // Accelerometer
             sb.append(", Accx:");
             sb.append(String.valueOf(sensorHelper.getAccx()));
             ax.setText("ax: " + sensorHelper.getAccx());
@@ -271,7 +303,7 @@ public class ScrollingActivity extends AppCompatActivity {
             sb.append(", Accz:");
             sb.append(String.valueOf(sensorHelper.getAccz()));
             az.setText("az: " + sensorHelper.getAccz());
-
+            // Gyroscopy
             sb.append(", Gyx:");
             sb.append(String.valueOf(sensorHelper.getGyx()));
             gx.setText("gx: " + sensorHelper.getGyx());
@@ -281,7 +313,7 @@ public class ScrollingActivity extends AppCompatActivity {
             sb.append(", Gyz:");
             sb.append(String.valueOf(sensorHelper.getGyz()));
             gz.setText("gz: " + sensorHelper.getGyz());
-
+            // Magnetometer
             sb.append(" Magx:");
             sb.append(String.valueOf(sensorHelper.getMagx()));
             max.setText("mx: " + sensorHelper.getMagx());
