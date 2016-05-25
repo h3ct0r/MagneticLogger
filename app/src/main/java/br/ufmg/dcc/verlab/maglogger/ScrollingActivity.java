@@ -6,10 +6,8 @@ import android.hardware.usb.UsbManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -64,6 +62,9 @@ public class ScrollingActivity extends AppCompatActivity {
     private Button con;
 
     private ProgressBar pb;
+
+    private double[] biasVector = {-1779.35, -717.80, -1853.35};
+    private double[] scaleVector = {1.24, 0.89, 0.92};
 
     void writeToTextView(TextView tView, NestedScrollView sView, String msg){
         if(tView == null) return;
@@ -246,10 +247,15 @@ public class ScrollingActivity extends AppCompatActivity {
             mx.setText("x: "+fdata[0]);
             my.setText("y: "+fdata[1]);
             mz.setText("z: " + fdata[2]);
+
             // Calibrated
-            mxc.setText("xc: " + fdata[0] * 1.247);
-            myc.setText("yc: " + fdata[1] * 0.894);
-            mzc.setText("zc: " + fdata[2] * 0.924);
+            double xCal =  (fdata[0] - this.biasVector[0]) * this.scaleVector[0];
+            double yCal =  (fdata[1] - this.biasVector[1]) * this.scaleVector[1];
+            double zCal =  (fdata[2] - this.biasVector[2]) * this.scaleVector[2];
+
+            mxc.setText("xc: " + xCal);
+            myc.setText("yc: " + yCal);
+            mzc.setText("zc: " + zCal);
 
             mT.setText("T: " + fdata[3]);
             mt.setText("t: " + fdata[4]);
@@ -258,11 +264,11 @@ public class ScrollingActivity extends AppCompatActivity {
             sb.append("Timestamp:" + (new Timestamp(date.getTime())).toString());
 
             sb.append(", XCal:");
-            sb.append(fdata[0]*1.247);
+            sb.append(xCal);
             sb.append(", YCal:");
-            sb.append(fdata[1]*0.894);
+            sb.append(yCal);
             sb.append(", ZCal:");
-            sb.append(fdata[2]*0.924);
+            sb.append(zCal);
 
             sb.append(", X:");
             sb.append(fdata[0]);
@@ -314,13 +320,13 @@ public class ScrollingActivity extends AppCompatActivity {
             sb.append(String.valueOf(sensorHelper.getGyz()));
             gz.setText("gz: " + sensorHelper.getGyz());
             // Magnetometer
-            sb.append(" Magx:");
+            sb.append(", Magx:");
             sb.append(String.valueOf(sensorHelper.getMagx()));
             max.setText("mx: " + sensorHelper.getMagx());
-            sb.append(" Magy:");
+            sb.append(", Magy:");
             sb.append(String.valueOf(sensorHelper.getMagy()));
             may.setText("my: " + sensorHelper.getMagy());
-            sb.append(" Magz:");
+            sb.append(", Magz:");
             sb.append(String.valueOf(sensorHelper.getMagz()));
             maz.setText("mz: " + sensorHelper.getMagz());
 
