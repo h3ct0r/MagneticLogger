@@ -48,7 +48,7 @@ public class ScrollingActivity extends AppCompatActivity {
 
     private TextView mx, my, mz;
     private TextView mxc, myc, mzc;
-    private TextView mT, mt;
+    private TextView mT, mt, mTc;
     private TextView txtlon, txtlat;
     private TextView gx, gy, gz;
     private TextView ax, ay, az;
@@ -127,21 +127,15 @@ public class ScrollingActivity extends AppCompatActivity {
 
         //Initialize text view datas from Magnetometer, IMU and GPS
         mx = (TextView) findViewById(R.id.txt_mx);
-        mx.setTextSize(8);
         my = (TextView) findViewById(R.id.txt_my);
-        my.setTextSize(8);
         mz = (TextView) findViewById(R.id.txt_mz);
-        mz.setTextSize(8);
         mxc = (TextView) findViewById(R.id.txt_mxc);
-        mxc.setTextSize(8);
         myc = (TextView) findViewById(R.id.txt_myc);
-        myc.setTextSize(8);
         mzc = (TextView) findViewById(R.id.txt_mzc);
-        mzc.setTextSize(8);
+        mTc = (TextView) findViewById(R.id.txt_mTc);
+
         mT = (TextView) findViewById(R.id.txt_mT);
-        mT.setTextSize(8);
         mt = (TextView) findViewById(R.id.txt_mt);
-        mt.setTextSize(8);
 
         txtlat = (TextView) findViewById(R.id.txt_lat);
         txtlat.setTextSize(8);
@@ -243,21 +237,22 @@ public class ScrollingActivity extends AppCompatActivity {
 
 
             // Get magnetometer data
-
-            mx.setText("x: "+fdata[0]);
-            my.setText("y: "+fdata[1]);
-            mz.setText("z: " + fdata[2]);
+            mx.setText("x: " + String.format("%.2f", fdata[0]));
+            my.setText("y: " + String.format("%.2f", fdata[1]));
+            mz.setText("z: " + String.format("%.2f", fdata[2]));
 
             // Calibrated
             double xCal =  (fdata[0] - this.biasVector[0]) * this.scaleVector[0];
             double yCal =  (fdata[1] - this.biasVector[1]) * this.scaleVector[1];
             double zCal =  (fdata[2] - this.biasVector[2]) * this.scaleVector[2];
+            double TCal =  Math.sqrt((xCal * xCal) + (yCal * yCal) + (zCal * zCal));
 
-            mxc.setText("xc: " + xCal);
-            myc.setText("yc: " + yCal);
-            mzc.setText("zc: " + zCal);
+            mxc.setText("xc: " + String.format("%.2f", xCal));
+            myc.setText("yc: " + String.format("%.2f", yCal));
+            mzc.setText("zc: " + String.format("%.2f", zCal));
 
-            mT.setText("T: " + fdata[3]);
+            mTc.setText("Tc: " + String.format("%.2f", TCal));
+            mT.setText("T: " + String.format("%.2f", fdata[3]));
             mt.setText("t: " + fdata[4]);
 
             java.util.Date date = new java.util.Date();

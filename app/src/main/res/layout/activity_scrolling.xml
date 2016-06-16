@@ -61,7 +61,7 @@
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceLarge"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
                     android:text="y:"
                     android:id="@+id/txt_my"
                     android:layout_weight="1" />
@@ -85,21 +85,42 @@
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
                     android:text="z:"
                     android:id="@+id/txt_mz"
-                    android:layout_weight="1"
-                    android:textSize="26dp" />
+                    android:layout_weight="1" />
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
                     android:text="zc:"
                     android:id="@+id/txt_mzc"
                     android:layout_weight="1"
-                    android:textSize="26dp"
                     android:textStyle="bold" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="T:"
+                    android:id="@+id/txt_mT"
+                    android:layout_weight="1" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="Tc:"
+                    android:id="@+id/txt_mTc"
+                    android:layout_weight="1"
+                    android:textStyle="bold"/>
+
             </LinearLayout>
 
             <LinearLayout
@@ -110,20 +131,10 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
                     android:text="t:"
                     android:id="@+id/txt_mt"
-                    android:layout_weight="1"
-                    android:textSize="26dp" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:text="T:"
-                    android:id="@+id/txt_mT"
-                    android:layout_weight="1"
-                    android:textSize="26dp" />
+                    android:layout_weight="1" />
             </LinearLayout>
 
         </LinearLayout>
